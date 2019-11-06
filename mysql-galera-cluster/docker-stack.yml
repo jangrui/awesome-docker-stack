@@ -1,0 +1,51 @@
+version: '3'
+services:
+  etcd:
+    image: bitnami/etcd:latest
+    # ports:
+    #   - 2379:2379
+    #   - 2380:2380
+    volumes:
+      - etcd:/opt/bitnami/etcd
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=yes
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+    deploy:
+      placement:
+        constraints:
+          - node.role==manager
+
+  pxc:
+    image: percona/percona-xtradb-cluster:5.7.25
+    depends_on:
+      - etcd
+    ports:
+      - 3306:3306
+    volumes:
+      - db:/var/lib/msql
+      - dblog:/var/log/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      DISCOVERY_SERVER: etcd:2379
+      CLUSTER_NAME: PXC
+      XTRABACKUP_PASSWORD: root
+      # MYSQL_DATABASE: testpasswd
+      # MYSQL_USER: test
+      # MYSQL_PASSWORD: testpasswd
+    deploy:
+      replicas: 3
+      placement:
+        constraints:
+          - node.role==worker
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 500M
+        reservations:
+          cpus: '0.25'
+          memory: 250M
+
+volumes:
+  etcd:
+  db:
+  dblog:
