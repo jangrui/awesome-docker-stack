@@ -15,8 +15,9 @@ services:
         constraints:
           - node.role==manager
 
-  pxc:
+  mysql:
     image: percona/percona-xtradb-cluster:5.7.25
+    # image: toughiq/mariadb-cluster:latest
     depends_on:
       - etcd
     ports:
